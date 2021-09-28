@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Webcam</title>
+	<style>
+		a.button1{
+			display:inline-block;
+			padding:0.35em 1.2em;
+			border:0.1em solid #000000;
+			margin:0 0.3em 0.3em 0;
+			border-radius:0.12em;
+			box-sizing: border-box;
+			text-decoration:none;
+			font-family:'Roboto',sans-serif;
+			font-weight:300;
+			color:#000000;
+			text-align:center;
+			transition: all 0.2s;
+			position:fixed;
+			left: 650px;
+			top: 650px;
+		}
+		a.button1:hover{
+			color:#FFFFFF;
+			background-color:#000000;
+		}
+		@media all and (max-width:30em){
+			a.button1{
+				display:block;
+				margin:0.4em auto;
+			}
+		}
+		div {
+		    padding-top: 20px;
+		    padding-bottom: 30px;
+		}
+		h1 {
+			font-family:'Roboto',sans-serif;
+			text-align: center;
+			padding-top: 20px;
+			font-weight:300;
+			text-shadow: 2px 2px 3px darkgray;
+		}
+		h3 {
+			font-family:'Roboto',sans-serif;
+			text-align: center;
+			font-weight:300;
+		}
+	</style>
+</head>
+<body>
+
+	<h1>AiryNet Classifier</h1>
+	<h3><i>Find the best glasses for you.</i></h3>
+
+	<div id="spanErrorMsg"></div>
+
+	<div class="video-wrap" style = "position:fixed; left:70px;">
+		<center><video id="video" playsinline autoplay></video></center>
+	</div>
+
+	<h3 style = "position:fixed; left:650px; text-align: left; line-height: 1.8;">By clicking on the button, you allow AiryNet and AiryNet to access your
+		camera to improve your user experience.
+		<br />
+		<br>点击“Capture”按钮即代表我授权AiryNet读取我的照相机权限以提供服务和改善用户体验。
+		<br>
+	</h3>
+
+	<h3 style = "position:fixed; left:650px; text-align: left; line-height: 1.8; top: 400px; color: slategray;">Make sure to position your face in the center of the screen,
+		ideally under a good lighting and showing all your facial features.
+		<br />
+		<br>请将脸放置于取相框中间，最好是在良好的光线环境下，并露出所有的脸部特征。
+		<br>
+	</h3>
+
+	<!-- Trigger canvas web API -->
+	<div class="controller">
+		<center><a class="button1" id="snap">Capture</a></center>
+	</div>
+
+	<!-- Webcam video snapshot -->
+	<canvas style = "position:fixed; left:770px; top: 600px;" id="canvas" width="120" height="120"></canvas>
+
+	<script>
+
+		const video = document.getElementById('video');
+		const canvas = document.getElementById('canvas');
+		const snap = document.getElementById('snap');
+		const errorMsgElement = document.getElementById('spanErrorMsg');
+
+		const constraints = {
+			audio: false,
+			video:{
+				width: 500, height: 500
+			}
+		};
+
+		async function init(){
+			try{
+				const stream = await navigator.mediaDevices.getUserMedia(constraints);
+				handleSuccess(stream);
+			}
+			catch(e){
+				errorMsgElement.innerHTML = `navigator.getUserMedia.error:${e.toString()}`;
+			}
+		};
+
+		//Success
+		function handleSuccess(stream){
+			window.stream = stream;
+			video.srcObject = stream;
+		};
+		//Load init
+		init();
+
+		var img = 0;
+		//Draw Image
+		var context = canvas.getContext('2d');
+		snap.addEventListener("click", function(){
+			context.drawImage(video, 0, 0, 120, 120);
+			var imagebase64data = canvas.toDataURL("image/png");
+        	imagebase64data = imagebase64data.replace('data:image/png;base64,', '');
+        	fetch("/", {
+        		method: "POST",
+        		body: '{"image":"' + imagebase64data + '"}'
+        	}).then(res=>res.text())
+        	  .then(data=>{
+        	  	console.log(data)
+        	  	if(data == 0)
+        	  		{
+        	  			location.href='https://yozhang24.wixsite.com/glassify/%E5%89%AF%E6%9C%AC-smart-casual';
+        	  		}
+        	  	else
+        	  		{
+        	  			location.href='https://yozhang24.wixsite.com/glassify/for-home';}
+        	});
+		});
+
+
+
+<!--		//Back-end-->
+
+<!--		function postData(url, data) {-->
+<!--		// Default options are marked with *-->
+<!--			return fetch(url, {-->
+<!--				body: JSON.stringify(img), // must match 'Content-Type' header-->
+<!--				cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached-->
+<!--				credentials: 'same-origin', // include, same-origin, *omit-->
+<!--				headers: {-->
+<!--				  'user-agent': 'Mozilla/4.0 MDN Example',-->
+<!--				  'content-type': 'application/json'-->
+<!--				},-->
+<!--				method: 'POST', // *GET, POST, PUT, DELETE, etc.-->
+<!--				mode: 'cors', // no-cors, cors, *same-origin-->
+<!--				redirect: 'follow', // manual, *follow, error-->
+<!--				referrer: 'no-referrer', // *client, no-referrer-->
+<!--			})-->
+<!--		   .then(response => response.json()) // parses response to JSON-->
+
+
+<!--		snap.addEventListener("click", postData('http://example.com/answer', {data:img})-->
+<!--		  .then(data => console.log(img)) // JSON from `response.json()` call-->
+<!--		  .catch(error => console.error(error)))-->
+
+
+
+	</script>
+</body>
+</html>
